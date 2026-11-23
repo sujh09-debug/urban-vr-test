@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Urban Scale VR — 조교용 스타터</title>
+  <script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+  <script src="config.js"></script>
+  <style>
+    body { font-family:system-ui,"Noto Sans KR",sans-serif; }
+    #desk { position:fixed; z-index:9; top:12px; left:12px; max-width:440px;
+      background:rgba(20,34,52,.92);color:#fff;border-radius:14px;padding:14px 16px;
+      box-shadow:0 4px 26px rgba(0,0,0,.2); }
+    #desk h1 { margin:0 0 6px;font-size:17px; }
+    #desk p {font-size:12px;line-height:1.5;margin:6px 0;color:#d9e4ed}
+    #desk .buttons {display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;}
+    #desk button {border:none;padding:8px 10px;border-radius:7px;cursor:pointer;
+      background:#d3e2ec;color:#162538;font-size:13px;font-weight:700;}
+    #desk button.active {background:#f1b966;color:#1b2435;}
+    #desk .status {color:#b6f0d1;font-weight:700;}
+    #desk .warning {color:#ffd19d;}
+    @media (max-width:650px){ #desk{position:relative;top:auto;left:auto;max-width:none;border-radius:0;} }
+  </style>
+</head>
+<body>
+  <div id="desk">
+    <h1>Urban Scale VR · 4라운드</h1>
+    <p>PC: 아래 버튼 클릭 / Quest: VR 진입 후 오른손 컨트롤러 레이저로 하단 메뉴 선택</p>
+    <div id="roundButtons" class="buttons"></div>
+    <div id="variantButtons" class="buttons"></div>
+    <div id="viewButtons" class="buttons"></div>
+    <p id="status" class="status">로딩 중...</p>
+    <p class="warning">테스트 모드에서는 치수가 포함된 임시 도형이 보입니다. 수업용으로는 GLB 8개를 업로드하고 배포용 config로 교체하세요.</p>
+  </div>
+  <a-scene id="scene" background="color: #D6E5F0" renderer="colorManagement:true; antialias:true"
+           vr-mode-ui="enabled:true">
+    <a-entity light="type:ambient;intensity:0.78"></a-entity>
+    <a-entity light="type:directional;intensity:0.6" position="-2 10 5"></a-entity>
+    <a-sky color="#D6E5F0"></a-sky>
+    <a-entity id="environment"></a-entity>
+    <a-entity id="rig" position="0 0 0">
+      <a-entity id="camera" camera look-controls="pointerLockEnabled:false"
+                wasd-controls="enabled:false" position="0 1.6 0"
+                cursor="rayOrigin: mouse; fuse: false" raycaster="objects: .vr-clickable; far: 5">
+        <a-entity id="vrMenu" position="0 -0.63 -1.55" rotation="-14 0 0"></a-entity>
+      </a-entity>
+      <a-entity id="rightHand" laser-controls="hand: right"
+                raycaster="objects: .vr-clickable; far: 5" line="color:#8FE6D3"></a-entity>
+    </a-entity>
+  </a-scene>
+  <script src="app.js"></script>
+</body>
+</html>
