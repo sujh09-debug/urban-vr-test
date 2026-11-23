@@ -2,7 +2,7 @@
 window.URBAN_VR_CONFIG = {
  mode:'glb', start:{round:1,variant:'A'}, rounds:[
   {number:1,label:'Street Scale',variants:[
-    {id:'A',file:'models/r1_a.glb',type:'street',width:9,height:11,length:50,views:[{id:'P1',x:0,z:15},{id:'P2',x:0,z:-5}]},
+    {id:'A',file:'r1_a.glb',type:'street',width:9,height:11,length:50,views:[{id:'P1',x:0,z:15},{id:'P2',x:0,z:-5}]},
     {id:'B',file:'models/r1_b.glb',type:'street',width:20,height:17,length:50,views:[{id:'P1',x:0,z:15},{id:'P2',x:0,z:-5}]}
   ]},
   {number:2,label:'Podium',variants:[
