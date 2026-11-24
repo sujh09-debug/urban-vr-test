@@ -21,7 +21,7 @@ window.URBAN_VR_CONFIG = {
         },
         {
           id: 'B',
-          file: 'models/r1_b.glb',
+          file: 'r1_b.glb',
           type: 'street',
           width: 20,
           height: 17,
