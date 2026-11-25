@@ -6,6 +6,65 @@
   <title>Urban Scale VR — 조교용 스타터</title>
   <script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
   <script src="config.js"></script>
+  <script>
+/* Quest locomotion: translate the existing rig; preserve its height and view presets. */
+AFRAME.registerComponent('quest-free-walk', {
+  schema: {
+    speed: {type: 'number', default: 1.2},
+    deadzone: {type: 'number', default: 0.2}
+  },
+
+  init: function () {
+    this.forward = new AFRAME.THREE.Vector3(0, 0, -1);
+    this.heading = new AFRAME.THREE.Vector3(0, 0, -1);
+    this.right = new AFRAME.THREE.Vector3(1, 0, 0);
+    this.up = new AFRAME.THREE.Vector3(0, 1, 0);
+  },
+
+  tick: function (time, timeDelta) {
+    const scene = this.el.sceneEl;
+    if (!scene.is('vr-mode') || document.hidden) return;
+    const xr = scene.renderer && scene.renderer.xr;
+    const session = xr && xr.getSession();
+    if (!session || !scene.camera || !Number.isFinite(timeDelta) || timeDelta <= 0) return;
+    if (session.visibilityState && session.visibilityState !== 'visible') return;
+
+    // Poll the current XR session every frame, so released or disconnected
+    // controllers cannot leave a stale movement command behind.
+    let pad = null;
+    for (const source of session.inputSources) {
+      if (source.handedness === 'left' && source.gamepad) {
+        pad = source.gamepad;
+        break;
+      }
+    }
+    if (!pad || pad.connected === false || pad.axes.length < 2) return;
+    // xr-standard: axes 2/3 are the thumbstick. Two-axis devices use 0/1.
+    const offset = pad.axes.length >= 4 ? 2 : 0;
+    const x = pad.axes[offset];
+    const y = pad.axes[offset + 1];
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    const magnitude = Math.hypot(x, y);
+    const deadzone = Math.max(0, Math.min(0.95, this.data.deadzone));
+    if (magnitude <= deadzone) return;
+
+    // Use the real THREE camera (-Z forward), not an entity's +Z direction.
+    scene.camera.getWorldDirection(this.heading);
+    this.heading.y = 0;
+    if (this.heading.lengthSq() > 0.0001) {
+      this.forward.copy(this.heading).normalize();
+    }
+    this.right.crossVectors(this.forward, this.up).normalize();
+
+    const strength = (Math.min(magnitude, 1) - deadzone) / (1 - deadzone);
+    const step = Math.max(0, this.data.speed) * strength * Math.min(timeDelta, 100) / 1000;
+    const position = this.el.object3D.position;
+    // Up on the thumbstick is negative Y; looking up/down never changes height.
+    position.addScaledVector(this.forward, -y / magnitude * step);
+    position.addScaledVector(this.right, x / magnitude * step);
+  }
+});
+  </script>
   <style>
     body { font-family:system-ui,"Noto Sans KR",sans-serif; }
     #desk { position:fixed; z-index:9; top:12px; left:12px; max-width:440px;
@@ -25,12 +84,12 @@
 <body>
   <div id="desk">
     <h1>Urban Scale VR · 4라운드</h1>
-    <p>PC: 아래 버튼 클릭 / Quest: VR 진입 후 오른손 컨트롤러 레이저로 하단 메뉴 선택</p>
+    <p>PC: 아래 버튼 클릭 / Quest: 왼쪽 스틱으로 이동 · 고개를 돌려 방향 변경 · 오른손 레이저와 트리거로 메뉴 선택</p>
     <div id="roundButtons" class="buttons"></div>
     <div id="variantButtons" class="buttons"></div>
     <div id="viewButtons" class="buttons"></div>
     <p id="status" class="status">로딩 중...</p>
-    <p class="warning">테스트 모드에서는 치수가 포함된 임시 도형이 보입니다. 수업용으로는 GLB 8개를 업로드하고 배포용 config로 교체하세요.</p>
+    <p class="warning">P1 · P2를 선택하면 설정된 관찰 위치로 돌아갑니다.</p>
   </div>
   <a-scene id="scene" background="color: #D6E5F0" renderer="colorManagement:true; antialias:true"
            vr-mode-ui="enabled:true">
@@ -38,12 +97,13 @@
     <a-entity light="type:directional;intensity:0.6" position="-2 10 5"></a-entity>
     <a-sky color="#D6E5F0"></a-sky>
     <a-entity id="environment"></a-entity>
-    <a-entity id="rig" position="0 0 0">
+    <a-entity id="rig" position="0 0 0" quest-free-walk="speed: 1.2; deadzone: 0.2">
       <a-entity id="camera" camera look-controls="pointerLockEnabled:false"
                 wasd-controls="enabled:false" position="0 1.6 0"
                 cursor="rayOrigin: mouse; fuse: false" raycaster="objects: .vr-clickable; far: 5">
         <a-entity id="vrMenu" position="0 -0.63 -1.55" rotation="-14 0 0"></a-entity>
       </a-entity>
+      <a-entity id="leftHand" meta-touch-controls="hand: left"></a-entity>
       <a-entity id="rightHand" laser-controls="hand: right"
                 raycaster="objects: .vr-clickable; far: 5" line="color:#8FE6D3"></a-entity>
     </a-entity>
