@@ -40,7 +40,7 @@ window.URBAN_VR_CONFIG = {
       variants: [
         {
           id: 'A',
-          file: 'models/r2_a.glb',
+          file: 'r2_a.glb',
           type: 'street',
           width: 21,
           height: 31,
@@ -52,7 +52,7 @@ window.URBAN_VR_CONFIG = {
         },
         {
           id: 'B',
-          file: 'models/r2_b.glb',
+          file: 'r2_b.glb',
           type: 'podium',
           width: 21,
           height: 31,
@@ -100,7 +100,7 @@ window.URBAN_VR_CONFIG = {
       variants: [
         {
           id: 'A',
-          file: 'models/r4_a.glb',
+          file: 'r4_a.glb',
           type: 'street',
           width: 9,
           height: 9,
@@ -112,7 +112,7 @@ window.URBAN_VR_CONFIG = {
         },
         {
           id: 'B',
-          file: 'models/r4_b.glb',
+          file: 'r4_b.glb',
           type: 'street',
           width: 27,
           height: 27,
