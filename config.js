@@ -71,7 +71,7 @@ window.URBAN_VR_CONFIG = {
       variants: [
         {
           id: 'A',
-          file: 'models/r3_a.glb',
+          file: 'r3_a.glb',
           type: 'plaza',
           plazaWidth: 44,
           plazaDepth: 44,
@@ -82,7 +82,7 @@ window.URBAN_VR_CONFIG = {
         },
         {
           id: 'B',
-          file: 'models/r3_b.glb',
+          file: 'r3_b.glb',
           type: 'plaza',
           plazaWidth: 26,
           plazaDepth: 26,
