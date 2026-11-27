@@ -96,7 +96,7 @@ window.URBAN_VR_CONFIG = {
 
     {
       number: 4,
-      label: 'Equal D/H',
+      label: 'D/H',
       variants: [
         {
           id: 'A',
