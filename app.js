@@ -101,10 +101,26 @@
     return group;
   }
   function goView(id){
-    const v=currentVariant(); const p=v.views.find(a=>a.id===id)||v.views[0];
+    const v=currentVariant();
+    const p=v.views.find(a=>a.id===id)||v.views[0];
+
     state.view=p.id;
-    // Camera remains a 1.6m child of the rig. HMD orientation remains physical.
     rig.setAttribute('position',`${p.x} 0 ${p.z}`);
+
+    const camera=document.getElementById('camera');
+    const forward=new AFRAME.THREE.Vector3(0,0,-1)
+      .applyQuaternion(camera.object3D.quaternion);
+
+    const headYaw=AFRAME.THREE.MathUtils.radToDeg(
+      Math.atan2(-forward.x,-forward.z)
+    );
+
+    rig.setAttribute('rotation',`0 ${(p.yaw || 0)-headYaw} 0`);
+
+    const title=document.getElementById('vrTitle');
+    if(title) title.setAttribute('value',
+      `R${state.round} ${currentRound().label} | SPACE ${state.variant} | ${state.view}`);
+
     updateButtons();
   }
   function show(roundNum,variantId){
