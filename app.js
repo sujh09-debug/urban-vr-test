@@ -1,6 +1,6 @@
 /* Urban Scale VR starter (A-Frame 1.8.0): one webpage, eight scenes, no PC required by students.
  * Demo mode: procedural models with exact dimensions. Production mode: external GLB files.
- * UI: PC buttons and VR controller ray-click. No joystick locomotion or physical walking.
+ * UI: PC buttons and VR controller ray-click. Collision-aware joystick movement is in walk-collision.js.
  */
 (function () {
   'use strict';
@@ -89,13 +89,31 @@
     }
     return group;
   }
+  function prepareWalk(root,token,loadedMessage){
+    if(token!==state.token) return;
+    const walk=rig.components['quest-free-walk'];
+    if(!walk){message('이동 준비 실패: 새로고침해 주세요',true);return;}
+    message(`R${state.round} ${state.variant} / PREPARING`);
+    walk.setEnvironment(root).then(ready=>{
+      if(ready && token===state.token) message(loadedMessage);
+    }).catch(error=>{
+      if(token===state.token){
+        console.error('Movement preparation failed',error);
+        message('이동 준비 실패: 새로고침해 주세요',true);
+      }
+    });
+  }
   function makeProduction(v,token){
     const group=E('a-entity',{},env);
     const model=E('a-entity',{},group);
     const timeout=setTimeout(()=>{
       if(token===state.token){message('GLB 장시간 로딩: 파일 크기·Wi-Fi 확인',true);}
     },12000);
-    model.addEventListener('model-loaded',()=>{clearTimeout(timeout);if(token===state.token)message(`R${state.round} ${state.variant} / GLB loaded`);},{once:true});
+    model.addEventListener('model-loaded',event=>{
+      clearTimeout(timeout);
+      if(token===state.token) prepareWalk(event.detail.model,token,
+        `R${state.round} ${state.variant} / GLB loaded`);
+    },{once:true});
     model.addEventListener('model-error',()=>{clearTimeout(timeout);if(token===state.token)message(`R${state.round} ${state.variant}: GLB FILE ERROR`,true);},{once:true});
     model.setAttribute('gltf-model',`url(${v.file})`);
     return group;
@@ -128,8 +146,15 @@
     const v=r.variants.find(x=>x.id===variantId)||r.variants[0];
     state.round=r.number;state.variant=v.id;state.view='P1';state.token++;
     const token=state.token;
+    rig.components['quest-free-walk']?.clearEnvironment();
     clearChildren(env);
-    if(cfg.mode==='demo') {makeDemo(v);message(`R${state.round} ${state.variant} / DEMO`);}
+    if(cfg.mode==='demo') {
+      makeDemo(v);
+      setTimeout(()=>{
+        if(token===state.token) prepareWalk(env.object3D,token,
+          `R${state.round} ${state.variant} / DEMO`);
+      },0);
+    }
     else {message(`R${state.round} ${state.variant} / LOADING`);makeProduction(v,token);}
     goView(v.views[0].id); renderDesktop(); renderVrMenu();
   }
@@ -150,79 +175,58 @@
       c.setAttribute('color',c.dataset.view===state.view?'#EFB56C':'#436B7C');
     }
   }
-  function vrButton(x,y,label,cb,active=false,view='',buttonWidth=.285,textWidth=1.6){
+  function vrButton(x,y,label,cb,active=false,view='',buttonWidth=.285,textWidth=1.6,buttonHeight=.155){
     const rect=E('a-plane',{
       position:`${x} ${y} 0.016`,
       width:buttonWidth,
-      height:.155,
+      height:buttonHeight,
       color:active?'#EFB56C':'#436B7C',
       material:'shader:flat',
       class:'vr-clickable'
     },vrMenu);
-
     if(view) rect.dataset.view=view;
-
     E('a-text',{
       value:label,
       align:'center',
       color:active?'#172B38':'#FFFFFF',
       width:textWidth,
+      'white-space':'nowrap',
       position:`${x} ${y-.014} 0.023`
     },vrMenu);
-
     rect.addEventListener('click',cb);
     return rect;
   }
 
   function renderVrMenu(){
     clearChildren(vrMenu);
-
     E('a-plane',{
-      width:1.95,
-      height:.62,
-      color:'#183047',
-      opacity:.89,
+      width:1.95,height:1.0,color:'#183047',opacity:.89,
       material:'transparent:true;shader:flat'
     },vrMenu);
-
     E('a-text',{
       id:'vrTitle',
       value:`R${state.round} ${currentRound().label} | SPACE ${state.variant} | ${state.view}`,
-      width:2.1,
-      align:'center',
-      color:'#FFFFFF',
-      position:'0 0.225 0.022'
+      width:2.1,align:'center',color:'#FFFFFF',position:'0 0.40 0.022'
     },vrMenu);
 
-    const rXs=[-.69,-.23,.23,.69];
-
+    // Two wider columns keep full round names readable without widening the HUD.
+    const rXs=[-.46,.46];
     cfg.rounds.forEach((r,i)=>vrButton(
-      rXs[i],.06,`R${r.number} ${r.label}`,
+      rXs[i%2],.18-Math.floor(i/2)*.22,`R${r.number} ${r.label}`,
       ()=>show(r.number,r.variants[0].id),
-      r.number===state.round,'',.43,1.05
+      r.number===state.round,'',.86,2.0,.18
     ));
 
     const varXs=[-.67,-.32,.03];
-
     currentRound().variants.forEach((v,i)=>vrButton(
-      varXs[i],-.14,v.id,
-      ()=>show(state.round,v.id),
-      v.id===state.variant
+      varXs[i],-.29,v.id,()=>show(state.round,v.id),v.id===state.variant
     ));
-
     currentVariant().views.forEach((p,i)=>vrButton(
-      .43+i*.35,-.14,p.id,
-      ()=>goView(p.id),
-      p.id===state.view,p.id
+      .43+i*.35,-.29,p.id,()=>goView(p.id),p.id===state.view,p.id
     ));
-
     E('a-text',{
-      id:'vrStatus',
-      value:cfg.mode==='demo'?'DEMO':'GLB',
-      width:1.15,
-      align:'center',
-      color:'#B6F0D1',
-      position:'0 -0.274 0.022'
+      id:'vrStatus',value:status.textContent || (cfg.mode==='demo'?'DEMO':'GLB'),
+      width:1.15,align:'center',color:'#B6F0D1',position:'0 -0.43 0.022'
     },vrMenu);
   }
   function init(){
