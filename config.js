@@ -15,7 +15,7 @@ window.URBAN_VR_CONFIG = {
           height: 11,
           length: 50,
           views: [
-            { id: 'P1', x: 4.34, z: -24 },
+            { id: 'P1', x: 4.34, z: -24, yaw: 180 },
             { id: 'P2', x: 0, z: -5 }
           ]
         },
