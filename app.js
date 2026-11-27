@@ -134,24 +134,80 @@
       c.setAttribute('color',c.dataset.view===state.view?'#EFB56C':'#436B7C');
     }
   }
-  function vrButton(x,y,label,cb,active=false,view=''){
-    const rect=E('a-plane',{position:`${x} ${y} 0.016`,width:.285,height:.155,
-      color:active?'#EFB56C':'#436B7C',material:'shader:flat',class:'vr-clickable'},vrMenu);
-    if(view)rect.dataset.view=view;
-    E('a-text',{value:label,align:'center',color:active?'#172B38':'#FFFFFF',width:1.6,
-      position:`${x} ${y-.014} 0.023`},vrMenu);
-    rect.addEventListener('click',cb);return rect;
+  function vrButton(x,y,label,cb,active=false,view='',buttonWidth=.285,textWidth=1.6){
+    const rect=E('a-plane',{
+      position:`${x} ${y} 0.016`,
+      width:buttonWidth,
+      height:.155,
+      color:active?'#EFB56C':'#436B7C',
+      material:'shader:flat',
+      class:'vr-clickable'
+    },vrMenu);
+
+    if(view) rect.dataset.view=view;
+
+    E('a-text',{
+      value:label,
+      align:'center',
+      color:active?'#172B38':'#FFFFFF',
+      width:textWidth,
+      position:`${x} ${y-.014} 0.023`
+    },vrMenu);
+
+    rect.addEventListener('click',cb);
+    return rect;
   }
+
   function renderVrMenu(){
     clearChildren(vrMenu);
-    E('a-plane',{width:1.95,height:.62,color:'#183047',opacity:.89,material:'transparent:true;shader:flat'},vrMenu);
-    E('a-text',{value:`R${state.round} | SPACE ${state.variant} | ${state.view}`,width:2.3,align:'center',color:'#FFFFFF',position:'0 0.225 0.022'},vrMenu);
-    const rXs=[-.66,-.22,.22,.66];
-    cfg.rounds.forEach((r,i)=>vrButton(rXs[i],.06,'R'+r.number,()=>show(r.number,r.variants[0].id),r.number===state.round));
+
+    E('a-plane',{
+      width:1.95,
+      height:.62,
+      color:'#183047',
+      opacity:.89,
+      material:'transparent:true;shader:flat'
+    },vrMenu);
+
+    E('a-text',{
+      id:'vrTitle',
+      value:`R${state.round} ${currentRound().label} | SPACE ${state.variant} | ${state.view}`,
+      width:2.1,
+      align:'center',
+      color:'#FFFFFF',
+      position:'0 0.225 0.022'
+    },vrMenu);
+
+    const rXs=[-.69,-.23,.23,.69];
+
+    cfg.rounds.forEach((r,i)=>vrButton(
+      rXs[i],.06,`R${r.number} ${r.label}`,
+      ()=>show(r.number,r.variants[0].id),
+      r.number===state.round,'',.43,1.05
+    ));
+
     const varXs=[-.67,-.32,.03];
-    currentRound().variants.forEach((v,i)=>vrButton(varXs[i],-.14,v.id,()=>show(state.round,v.id),v.id===state.variant));
-    currentVariant().views.forEach((p,i)=>vrButton(.43+i*.35,-.14,p.id,()=>goView(p.id),p.id===state.view,p.id));
-    E('a-text',{id:'vrStatus',value:cfg.mode==='demo'?'DEMO':'GLB',width:1.15,align:'center',color:'#B6F0D1',position:'0 -0.274 0.022'},vrMenu);
+
+    currentRound().variants.forEach((v,i)=>vrButton(
+      varXs[i],-.14,v.id,
+      ()=>show(state.round,v.id),
+      v.id===state.variant
+    ));
+
+    currentVariant().views.forEach((p,i)=>vrButton(
+      .43+i*.35,-.14,p.id,
+      ()=>goView(p.id),
+      p.id===state.view,p.id
+    ));
+
+    E('a-text',{
+      id:'vrStatus',
+      value:cfg.mode==='demo'?'DEMO':'GLB',
+      width:1.15,
+      align:'center',
+      color:'#B6F0D1',
+      position:'0 -0.274 0.022'
+    },vrMenu);
   }
   function init(){
     const c=cfg.rounds.find(r=>r.number===state.round)||cfg.rounds[0];
